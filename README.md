@@ -96,3 +96,97 @@ echo "Decode:\n" . print_r($decoded_array, true) . "\n";
 ?>
 ```
 
+
+解释一下JWT
+------------
+
+>>JWT就是一个字符串，经过加密处理与校验处理的字符串，由三个部分组成。基于token的身份验证可以替代传统的cookie+session身份验证方法。三个部分分别如下：
+
+#### header部分组成
+
+header 格式为:
+-----------------
+```php
+{
+"typ":"JWT",
+"alg":"HS256"
+}
+
+```
+这就是一个json串，两个字段都是必须的,alg字段指定了生成signature的算法，默认值为 HS256,可以自己指定其他的加密算法，如RSA.经过base64encode就可以得到 header.
+
+#### payload 部分组成
+
+playload 基本组成部分：
+--------------------------------
+
+>>简单点：
+```php
+$payload=[
+            'iss' => $issuer, //签发者
+            'iat' => $_SERVER['REQUEST_TIME'], //什么时候签发的
+            'exp' => $_SERVER['REQUEST_TIME'] + 7200 //过期时间
+            'uid'=>1111
+        ];
+```
+
+>> 复杂点：官方说法,三个部分组成(Reserved claims，Public claims,Private claims)
+```php
+$token   = [
+            #非必须。issuer 请求实体，可以是发起请求的用户的信息，也可是jwt的签发者。
+            "iss"       => "http://example.org",
+            #非必须。issued at。 token创建时间，unix时间戳格式
+            "iat"       => $_SERVER['REQUEST_TIME'],
+            #非必须。expire 指定token的生命周期。unix时间戳格式
+            "exp"       => $_SERVER['REQUEST_TIME'] + 7200,
+            #非必须。接收该JWT的一方。
+            "aud"       => "http://example.com",
+            #非必须。该JWT所面向的用户
+            "sub"       => "jrocket@example.com",
+            # 非必须。not before。如果当前时间在nbf里的时间之前，则Token不被接受；一般都会留一些余地，比如几分钟。
+            "nbf"       => 1357000000,
+            # 非必须。JWT ID。针对当前token的唯一标识
+            "jti"       => '222we',
+            # 自定义字段
+            "GivenName" => "Jonny",
+            # 自定义字段
+            "name"   => "Rocket",
+            # 自定义字段
+            "Email"     => "jrocket@example.com",
+         
+        ];
+```
+payload也是一个json数据，是表明用户身份的数据，可以自己自定义字段，很灵活。你也可以简单的使用，比如简单的方式。经过json_encode和base64_encode就可得到payload
+
+#### signature组成部分
+
+>> 将 header和 payload使用header中指定的加密算法加密，当然加密过程还需要自定秘钥，自己选一个字符串就可以了。
+官网实例：
+```php
+HMACSHA256(
+  base64UrlEncode(header) + "." +
+  base64UrlEncode(payload),
+  secret)
+
+ 自己使用：
+  <?php
+
+    public static function encode(array $payload, string $key, string $alg = 'SHA256')
+    {
+        $key = md5($key);
+        $jwt = self::urlsafeB64Encode(json_encode(['typ' => 'JWT', 'alg' => $alg])) . '.' . self::urlsafeB64Encode(json_encode($payload));
+        return $jwt . '.' . self::signature($jwt, $key, $alg);
+    }
+
+   public static function signature(string $input, string $key, string $alg)
+    {
+        return hash_hmac($alg, $input, $key);
+    }
+```
+
+这三个部分使用.连接起来就是高大上的JWT,然后就可以使用了.
+
+
+参考文章：
+[https://www.cnblogs.com/xiekeli/p/5607107.html](https://www.cnblogs.com/xiekeli/p/5607107.html)
+[https://segmentfault.com/a/1190000009981879](https://segmentfault.com/a/1190000009981879)
