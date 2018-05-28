@@ -190,3 +190,4 @@ HMACSHA256(
 参考文章：
 [https://www.cnblogs.com/xiekeli/p/5607107.html](https://www.cnblogs.com/xiekeli/p/5607107.html)
 [https://segmentfault.com/a/1190000009981879](https://segmentfault.com/a/1190000009981879)
+[http://www.cnblogs.com/zjutzz/p/5790180.html](http://www.cnblogs.com/zjutzz/p/5790180.html)
